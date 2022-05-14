@@ -39,7 +39,7 @@ def main(_):
     train_set_3d, test_set_3d, data_mean_3d, data_std_3d, dim_to_ignore_3d, dim_to_use_3d, train_root_positions, test_root_positions = data_utils.read_3d_data(
         actions, FLAGS.data_dir, FLAGS.camera_frame, rcams, FLAGS.predict_14)
 
-    device_count = {"GPU": 0}
+    device_count = {"GPU": 1}
     png_lib = []
     with tf.Session(config=tf.ConfigProto(
             device_count=device_count,

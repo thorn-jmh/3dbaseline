@@ -8,9 +8,9 @@ import os
 
 
 #path to imageplane content
-openpose_images = "/home/flyn/git/3d-pose-baseline/test_images/" # replace it with abs path like "/path/to/bg_images" 
+openpose_images = "F:\\WTF\\cs\\thorn-jmh\\AlphaPose\\test\\out\\qaq\\vis\\" # replace it with abs path like "/path/to/bg_images" 
 #path to 3d-pose-baseline
-threed_pose_baseline = "/home/flyn/git/3d-pose-baseline/"
+threed_pose_baseline = "F:\\WTF\\cs\\thorn-jmh\\3d-pose-baseline\\"
 #for 3d use 3d_data.json and set three_dim to True
 input_json_path = [os.path.join(threed_pose_baseline, "maya/{0}.json".format(_data)) for _data in ["3d_data", "2d_data"]] # replace it with abs path like "/path/to/2d_data.json" 
 

@@ -19,23 +19,23 @@ TEST_SUBJECTS  = [9,11]
 
 # Joints in H3.6M -- data has 32 joints, but only 17 that move; these are the indices.
 H36M_NAMES = ['']*32
-H36M_NAMES[0]  = 'Hip'
-H36M_NAMES[1]  = 'RHip'
-H36M_NAMES[2]  = 'RKnee'
-H36M_NAMES[3]  = 'RFoot'
-H36M_NAMES[6]  = 'LHip'
-H36M_NAMES[7]  = 'LKnee'
-H36M_NAMES[8]  = 'LFoot'
-H36M_NAMES[12] = 'Spine'
-H36M_NAMES[13] = 'Thorax'
-H36M_NAMES[14] = 'Neck/Nose'
-H36M_NAMES[15] = 'Head'
-H36M_NAMES[17] = 'LShoulder'
-H36M_NAMES[18] = 'LElbow'
-H36M_NAMES[19] = 'LWrist'
-H36M_NAMES[25] = 'RShoulder'
-H36M_NAMES[26] = 'RElbow'
-H36M_NAMES[27] = 'RWrist'
+H36M_NAMES[0]  = 'Hip'       #盆骨
+H36M_NAMES[1]  = 'RHip'      #右股
+H36M_NAMES[2]  = 'RKnee'     #右膝
+H36M_NAMES[3]  = 'RFoot'     #右足
+H36M_NAMES[6]  = 'LHip'      #左股
+H36M_NAMES[7]  = 'LKnee'     #左膝
+H36M_NAMES[8]  = 'LFoot'     #左足
+H36M_NAMES[12] = 'Spine'     #脊柱中心
+H36M_NAMES[13] = 'Thorax'    #后颈
+H36M_NAMES[14] = 'Neck/Nose' #颈部/鼻部
+H36M_NAMES[15] = 'Head'      #额头
+H36M_NAMES[17] = 'LShoulder' #左肩
+H36M_NAMES[18] = 'LElbow'    #左肘
+H36M_NAMES[19] = 'LWrist'    #左腕
+H36M_NAMES[25] = 'RShoulder' #右肩
+H36M_NAMES[26] = 'RElbow'    #右肘
+H36M_NAMES[27] = 'RWrist'    #右腕
 
 # Stacked Hourglass produces 16 joints. These are the names.
 SH_NAMES = ['']*16

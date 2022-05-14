@@ -1,6 +1,7 @@
 
 """Functions to visualize human poses"""
 
+import pdb
 import matplotlib.pyplot as plt
 import data_utils
 import numpy as np
@@ -22,6 +23,7 @@ def show3Dpose(channels, ax, lcolor="#3498db", rcolor="#e74c3c", add_labels=Fals
     Nothing. Draws on ax.
   """
 
+  # pdb.set_trace()
   assert channels.size == len(data_utils.H36M_NAMES)*3, "channels should have 96 entries, it has %d instead" % channels.size
   vals = np.reshape( channels, (len(data_utils.H36M_NAMES), -1) )
 
@@ -34,25 +36,25 @@ def show3Dpose(channels, ax, lcolor="#3498db", rcolor="#e74c3c", add_labels=Fals
     ax.plot(x, y, z, marker='o', markersize=2, lw=1, c=lcolor if LR[i] else rcolor)
 
   RADIUS = 750 # space around the subject
-  xroot, yroot, zroot = vals[0,0], vals[0,1], vals[0,2]
-  ax.set_xlim3d([-RADIUS+xroot, RADIUS+xroot])
-  ax.set_zlim3d([-RADIUS+zroot, RADIUS+zroot])
-  ax.set_ylim3d([-RADIUS+yroot, RADIUS+yroot])
+  # xroot, yroot, zroot = vals[0,0], vals[0,1], vals[0,2]
+  ax.set_xlim3d([-750,750])
+  ax.set_zlim3d([-750,750])
+  ax.set_ylim3d([-750,750])
 
   if add_labels:
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
-
+  
   # Get rid of the ticks and tick labels
-  ax.set_xticks([])
-  ax.set_yticks([])
-  ax.set_zticks([])
+  ax.set_xticks([-700,0,700])
+  ax.set_yticks([-700,0,700])
+  ax.set_zticks([-700,0,700])
 
-  ax.get_xaxis().set_ticklabels([])
-  ax.get_yaxis().set_ticklabels([])
-  ax.set_zticklabels([])
-  ax.set_aspect('equal')
+  # ax.get_xaxis().set_ticklabels([])
+  # ax.get_yaxis().set_ticklabels([])
+  # ax.set_zticklabels([])
+  ax.set_aspect('auto') #TODO:
 
   # Get rid of the panes (actually, make them white)
   white = (1.0, 1.0, 0.1, 0.0)
@@ -61,9 +63,9 @@ def show3Dpose(channels, ax, lcolor="#3498db", rcolor="#e74c3c", add_labels=Fals
   # Keep z pane
 
   # Get rid of the lines in 3d
-  ax.w_xaxis.line.set_color(white)
-  ax.w_yaxis.line.set_color(white)
-  ax.w_zaxis.line.set_color(white)
+  # ax.w_xaxis.line.set_color(white)
+  # ax.w_yaxis.line.set_color(white)
+  # ax.w_zaxis.line.set_color(white)
 
 def show2Dpose(channels, ax, lcolor="#3498db", rcolor="#e74c3c", add_labels=False):
   """
@@ -107,4 +109,4 @@ def show2Dpose(channels, ax, lcolor="#3498db", rcolor="#e74c3c", add_labels=Fals
     ax.set_xlabel("x")
     ax.set_ylabel("z")
 
-  ax.set_aspect('equal')
+  ax.set_aspect('auto') #TODO:

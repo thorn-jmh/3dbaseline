@@ -1,7 +1,9 @@
+import pdb
+from random import expovariate
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import data_utils
 import viz
 import re
@@ -25,15 +27,21 @@ order = [15, 12, 25, 26, 27, 17, 18, 19, 1, 2, 3, 6, 7, 8]
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def show_anim_curves(anim_dict, _plt):
+    # pdb.set_trace()
     val = np.array(list(anim_dict.values()))
+    #读取所有帧的某个节点的 x,y 坐标
     for o in range(0,36,2):
         x = val[:,o]
         y = val[:,o+1]
+        #红色虚线
         _plt.plot(x, 'r--', linewidth=0.2)
+        #绿色
         _plt.plot(y, 'g', linewidth=0.2)
     return _plt
 
+#读入2d_json文件
 def read_openpose_json(smooth=True, *args):
     # openpose output format:
     # [x1,y1,c1,x2,y2,c2,...]
@@ -42,9 +50,14 @@ def read_openpose_json(smooth=True, *args):
     logger.info("start reading json files")
     #load json files
     json_files = os.listdir(openpose_output_dir)
+    json_files = [file_name for file_name in json_files if file_name.endswith(".json")]
     # check for other file types
-    json_files = sorted([filename for filename in json_files if filename.endswith(".json")])
+    #改成了sort
+    json_files.sort(key=lambda x: int(x[:-5]))
+    # pdb.set_trace()
+    #cache dict
     cache = {}
+    #
     smoothed = {}
     ### extract x,y and ignore confidence score
     for file_name in json_files:
@@ -71,6 +84,7 @@ def read_openpose_json(smooth=True, *args):
 
         #body_25 support, convert body_25 output format to coco
         if len(_data)>54:
+            # pdb.set_trace()
             _xy = xy[0:19*2]
             for x in range(len(xy)):
                 #del jnt 8
@@ -124,9 +138,11 @@ def read_openpose_json(smooth=True, *args):
         #add xy to frame
         cache[int(frame_indx[-1])] = xy
 
+    # pdb.set_trace()DEBUG:
     plt.figure(1)
+    #某个节点坐标的变化曲线
     drop_curves_plot = show_anim_curves(cache, plt)
-    pngName = 'gif_output/dirty_plot.png'
+    pngName = 'F:\\WTF\cs\\thorn-jmh\\3d-pose-baseline\\test\\gif_output\\dirty_plot.png' #TODO:
     drop_curves_plot.savefig(pngName)
     logger.info('writing gif_output/dirty_plot.png')
 
@@ -150,10 +166,11 @@ def read_openpose_json(smooth=True, *args):
     tail_frame_block = [int(re.findall("(\d+)", o)[-1]) for o in json_files[-4:]]
 
     ### smooth by median value, n frames 
+    #通过临近 3 帧坐标中位数确定smooth坐标
     for frame, xy in cache.items():
         # create neighbor array based on frame index
         forward, back = ([] for _ in range(2))
-
+        # pdb.set_trace()
         # joints x,y array
         _len = len(xy) # 36
 
@@ -224,36 +241,61 @@ def read_openpose_json(smooth=True, *args):
 
     return smoothed
 
+def save3Djson(pose3d, frame):
+    # pdb.set_trace()
+    export_units = {}
+    people = []
+    P = np.array([0,1,2,3,6,7,8,12,13,14,15,17,18,19,25,26,27])
+    vals = np.reshape( pose3d, (len(data_utils.H36M_NAMES), -1) )
+    for i in P :
+        for j in range(3):
+            people.append(vals[i,j])
+
+    export_units["version"]="3d-base-line"
+    export_units["pose_keypoints_3d"]=people
+    _out_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'maya/seq-json/{0}.json'.format(str(frame)))
+    with open(_out_file, 'w') as outfile:
+        logger.info("exported maya json to {0}".format(_out_file))
+        json.dump(export_units, outfile)
+
+
+
 
 def main(_):
-    
+    #读json且smooth
     smoothed = read_openpose_json()
+    #输出smooth后的坐标变化路径
     plt.figure(2)
     smooth_curves_plot = show_anim_curves(smoothed, plt)
     #return
-    pngName = 'gif_output/smooth_plot.png'
+    pngName = 'F:\\WTF\cs\\thorn-jmh\\3d-pose-baseline\\test\\gif_output\\smooth_plot.png' #TODO:
     smooth_curves_plot.savefig(pngName)
     logger.info('writing gif_output/smooth_plot.png')
     
+    #插帧
+    # pdb.set_trace()
     if FLAGS.interpolation:
         logger.info("start interpolation")
 
         framerange = len( smoothed.keys() )
         joint_rows = 36
+        #将原来的dict转换为f*j的数组
         array = np.concatenate(list(smoothed.values()))
         array_reshaped = np.reshape(array, (framerange, joint_rows) )
-    
+        #插帧间隔，默认0.1
         multiplier = FLAGS.multiplier
         multiplier_inv = 1/multiplier
 
         out_array = np.array([])
         for row in range(joint_rows):
+            #将全部的第 row 坐标插入x 
             x = []
             for frame in range(framerange):
                 x.append( array_reshaped[frame, row] )
-            
+            # pdb.set_trace()
             frame = range( framerange )
             frame_resampled = np.arange(0, framerange, multiplier)
+            #拟合曲线，k为平滑样条度数
             spl = UnivariateSpline(frame, x, k=3)
             #relative smooth factor based on jnt anim curve
             min_x, max_x = min(x), max(x)
@@ -265,6 +307,7 @@ def main(_):
             
             out_array = np.append(out_array, xnew)
     
+        # pdb.set_trace()
         logger.info("done interpolating. reshaping {0} frames,  please wait!!".format(framerange))
     
         a = np.array([])
@@ -274,6 +317,7 @@ def main(_):
                 jnt_array.append( out_array[ jnt * int(framerange * multiplier_inv) + frame] )
             a = np.append(a, jnt_array)
         
+        # pdb.set_trace()
         a = np.reshape(a, (int(framerange * multiplier_inv), joint_rows))
         out_array = a
     
@@ -281,13 +325,16 @@ def main(_):
         for frame in range( int(framerange * multiplier_inv) ):
             interpolate_smoothed[frame] = list( out_array[frame] )
         
+        # pdb.set_trace()
         plt.figure(3)
         smoothed = interpolate_smoothed
         interpolate_curves_plot = show_anim_curves(smoothed, plt)
-        pngName = 'gif_output/interpolate_{0}.png'.format(smooth_resamp)
+        pngName = 'F:\\WTF\cs\\thorn-jmh\\3d-pose-baseline\\test\\gif_output\\interpolate_{0}.png'.format(smooth_resamp)
         interpolate_curves_plot.savefig(pngName)
         logger.info('writing gif_output/interpolate_plot.png')
 
+    #prediction
+    # pdb.set_trace()
     enc_in = np.zeros((1, 64))
     enc_in[0] = [0 for i in range(64)]
 
@@ -300,7 +347,8 @@ def main(_):
     train_set_3d, test_set_3d, data_mean_3d, data_std_3d, dim_to_ignore_3d, dim_to_use_3d, train_root_positions, test_root_positions = data_utils.read_3d_data(
         actions, FLAGS.data_dir, FLAGS.camera_frame, rcams, FLAGS.predict_14)
 
-    device_count = {"GPU": 1}
+    # pdb.set_trace()
+    device_count = {"GPU": 0}
     png_lib = []
     before_pose = None
     with tf.Session(config=tf.ConfigProto(
@@ -395,19 +443,30 @@ def main(_):
                 to_export = poses3d.tolist()[0]
             else:
                 to_export = [0.0 for _ in range(96)]
-            logger.info("export {0}".format(to_export))
+            logger.debug("export {0}".format(to_export))
             for o in range(0, len(to_export), 3):
                 x.append(to_export[o])
                 y.append(to_export[o+1])
                 z.append(to_export[o+2])
-
+            # pdb.set_trace()
+            xx = p3d[0][0]
+            yy = p3d[0][1]
+            zz = p3d[0][2]
+            for o in range(0, len(p3d[0]), 3):
+                p3d[0][o] -= xx
+                p3d[0][o+1] -= yy
+                p3d[0][o+2] -= zz
             export_units[frame]={}
+            # pdb.set_trace()
             for jnt_index, (_x, _y, _z) in enumerate(zip(x,y,z)):
                 export_units[frame][jnt_index] = {"translate": [_x, _y, _z]}
-                viz.show3Dpose(p3d, ax, lcolor="#9b59b6", rcolor="#2ecc71")
-
-            pngName = 'png/pose_frame_{0}.png'.format(str(frame).zfill(12))
-            plt.savefig(pngName)
+               
+            viz.show3Dpose(p3d, ax, lcolor="#9b59b6", rcolor="#2ecc71")
+            save3Djson(p3d , frame)
+            # pngName = 'F:\\WTF\cs\\thorn-jmh\\3d-pose-baseline\\test\\gif_output\\pose_frame_{0}.png'.format(str(frame).zfill(12))
+            # #TODO:
+            # # pdb.set_trace()
+            # plt.savefig(pngName)
             if FLAGS.write_gif:
                 png_lib.append(imageio.imread(pngName))
 
@@ -419,16 +478,18 @@ def main(_):
             #take every frame on gif_fps * multiplier_inv
             png_lib = np.array([png_lib[png_image] for png_image in range(0,len(png_lib), int(multiplier_inv)) ])
         logger.info("creating Gif gif_output/animation.gif, please Wait!")
-        imageio.mimsave('gif_output/animation.gif', png_lib, fps=FLAGS.gif_fps)
+        imageio.mimsave('F:\\WTF\cs\\thorn-jmh\\3d-pose-baseline\\test\\gif_output\\animation.gif', png_lib, fps=FLAGS.gif_fps)
+        # TODO:
 
-    _out_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'maya/3d_data.json')
-    twod_out_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'maya/2d_data.json')
-    with open(_out_file, 'w') as outfile:
-        logger.info("exported maya json to {0}".format(_out_file))
-        json.dump(export_units, outfile)
-    with open(twod_out_file, 'w') as outfile:
-        logger.info("exported maya json to {0}".format(twod_out_file))
-        json.dump(twod_export_units, outfile)
+    # _out_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'maya/3d_data.json')
+    # twod_out_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'maya/2d_data.json')
+    # with open(_out_file, 'w') as outfile:
+    #     logger.info("exported maya json to {0}".format(_out_file))
+    #     json.dump(export_units, outfile)
+    # with open(twod_out_file, 'w') as outfile:
+    #     logger.info("exported maya json to {0}".format(twod_out_file))
+    #     json.dump(twod_export_units, outfile)
+    
 
     logger.info("Done!".format(pngName))
 
