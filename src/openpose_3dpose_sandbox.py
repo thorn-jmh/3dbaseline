@@ -24,6 +24,8 @@ FLAGS = tf.app.flags.FLAGS
 
 order = [15, 12, 25, 26, 27, 17, 18, 19, 1, 2, 3, 6, 7, 8]
 
+outf= 'maya' # please make sure outpath exist and a 'seq-json' dir in it
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -142,9 +144,9 @@ def read_openpose_json(smooth=True, *args):
     plt.figure(1)
     #某个节点坐标的变化曲线
     drop_curves_plot = show_anim_curves(cache, plt)
-    pngName = 'F:\\WTF\cs\\thorn-jmh\\3d-pose-baseline\\test\\gif_output\\dirty_plot.png' #TODO:
-    drop_curves_plot.savefig(pngName)
-    logger.info('writing gif_output/dirty_plot.png')
+    # pngName = os.path.join(os.path.dirname(os.path.dirname(__file__)),"test/gif_output/dirty_plot.png")
+    # drop_curves_plot.savefig(pngName)
+    # logger.info('writing gif_output/dirty_plot.png')
 
     # exit if no smoothing
     if not smooth:
@@ -245,32 +247,40 @@ def save3Djson(pose3d, frame):
     # pdb.set_trace()
     export_units = {}
     people = []
+    first_people={}
+    pose_keypoints_3d=[]
     P = np.array([0,1,2,3,6,7,8,12,13,14,15,17,18,19,25,26,27])
     vals = np.reshape( pose3d, (len(data_utils.H36M_NAMES), -1) )
     for i in P :
         for j in range(3):
-            people.append(vals[i,j])
-
+            pose_keypoints_3d.append(vals[i,j])
+    first_people["pose_keypoints_3d"]=pose_keypoints_3d
+    people.append(first_people)
     export_units["version"]="3d-base-line"
-    export_units["pose_keypoints_3d"]=people
-    _out_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'maya/seq-json/{0}.json'.format(str(frame)))
+    export_units["people"]=people
+    
+    _out_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), outf+'/seq-json/{0}.json'.format(str(frame)))
     with open(_out_file, 'w') as outfile:
         logger.info("exported maya json to {0}".format(_out_file))
         json.dump(export_units, outfile)
+    
+    return export_units
 
 
 
 
 def main(_):
+    #所有帧
+    ALLjson={}
     #读json且smooth
     smoothed = read_openpose_json()
     #输出smooth后的坐标变化路径
     plt.figure(2)
     smooth_curves_plot = show_anim_curves(smoothed, plt)
     #return
-    pngName = 'F:\\WTF\cs\\thorn-jmh\\3d-pose-baseline\\test\\gif_output\\smooth_plot.png' #TODO:
-    smooth_curves_plot.savefig(pngName)
-    logger.info('writing gif_output/smooth_plot.png')
+    # pngName = os.path.join(os.path.dirname(os.path.dirname(__file__)),"test/gif_output/smooth_plot.png")
+    # smooth_curves_plot.savefig(pngName)
+    # logger.info('writing gif_output/smooth_plot.png')
     
     #插帧
     # pdb.set_trace()
@@ -329,9 +339,9 @@ def main(_):
         plt.figure(3)
         smoothed = interpolate_smoothed
         interpolate_curves_plot = show_anim_curves(smoothed, plt)
-        pngName = 'F:\\WTF\cs\\thorn-jmh\\3d-pose-baseline\\test\\gif_output\\interpolate_{0}.png'.format(smooth_resamp)
-        interpolate_curves_plot.savefig(pngName)
-        logger.info('writing gif_output/interpolate_plot.png')
+        # pngName = os.path.join(os.path.dirname(os.path.dirname(__file__)),"test/gif_output/interpolate_{0}.png".format(smooth_resamp))
+        # interpolate_curves_plot.savefig(pngName)
+        # logger.info('writing gif_output/interpolate_plot.png')
 
     #prediction
     # pdb.set_trace()
@@ -462,23 +472,28 @@ def main(_):
                 export_units[frame][jnt_index] = {"translate": [_x, _y, _z]}
                
             viz.show3Dpose(p3d, ax, lcolor="#9b59b6", rcolor="#2ecc71")
-            save3Djson(p3d , frame)
-            # pngName = 'F:\\WTF\cs\\thorn-jmh\\3d-pose-baseline\\test\\gif_output\\pose_frame_{0}.png'.format(str(frame).zfill(12))
-            # #TODO:
-            # # pdb.set_trace()
+            ALLjson[str(frame)]=save3Djson(p3d , frame)
+            # pngName = os.path.join(os.path.dirname(os.path.dirname(__file__)),'test\\gif_output\\pose_frame_{0}.png'.format(str(frame).zfill(12)))
+            # # #TODO:
+            # # # pdb.set_trace()
             # plt.savefig(pngName)
-            if FLAGS.write_gif:
-                png_lib.append(imageio.imread(pngName))
+            # if FLAGS.write_gif:
+            #     png_lib.append(imageio.imread(pngName))
 
             if FLAGS.cache_on_fail:
                 before_pose = poses3d
+    _out_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), outf+'/data0.json')
+    with open(_out_file, 'w') as outfile:
+        logger.info("exported maya json to data.json")
+        json.dump(ALLjson, outfile)
 
-    if FLAGS.write_gif:
-        if FLAGS.interpolation:
-            #take every frame on gif_fps * multiplier_inv
-            png_lib = np.array([png_lib[png_image] for png_image in range(0,len(png_lib), int(multiplier_inv)) ])
-        logger.info("creating Gif gif_output/animation.gif, please Wait!")
-        imageio.mimsave('F:\\WTF\cs\\thorn-jmh\\3d-pose-baseline\\test\\gif_output\\animation.gif', png_lib, fps=FLAGS.gif_fps)
+    # if FLAGS.write_gif:
+    #     if FLAGS.interpolation:
+    #         #take every frame on gif_fps * multiplier_inv
+    #         png_lib = np.array([png_lib[png_image] for png_image in range(0,len(png_lib), int(multiplier_inv)) ])
+    #     logger.info("creating Gif gif_output/animation.gif, please Wait!")
+    #     gifName = os.path.join(os.path.dirname(os.path.dirname(__file__)),"test/gif_output/animation.gif")
+    #     imageio.mimsave(gifName, png_lib, fps=FLAGS.gif_fps)
         # TODO:
 
     # _out_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'maya/3d_data.json')
@@ -491,7 +506,7 @@ def main(_):
     #     json.dump(twod_export_units, outfile)
     
 
-    logger.info("Done!".format(pngName))
+    logger.info("Done!")
 
 if __name__ == "__main__":
 
