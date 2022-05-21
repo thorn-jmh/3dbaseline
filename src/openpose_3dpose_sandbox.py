@@ -24,7 +24,7 @@ FLAGS = tf.app.flags.FLAGS
 
 order = [15, 12, 25, 26, 27, 17, 18, 19, 1, 2, 3, 6, 7, 8]
 
-outf= 'maya' # please make sure outpath exist and a 'seq-json' dir in it
+outf= 'maya' 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -259,10 +259,10 @@ def save3Djson(pose3d, frame):
     export_units["version"]="3d-base-line"
     export_units["people"]=people
     
-    _out_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), outf+'/seq-json/{0}.json'.format(str(frame)))
-    with open(_out_file, 'w') as outfile:
-        logger.info("exported maya json to {0}".format(_out_file))
-        json.dump(export_units, outfile)
+    # _out_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), outfilepath+'/{0}.json'.format(str(frame)))
+    # with open(_out_file, 'w') as outfile:
+    #     logger.info("exported maya json to {0}".format(_out_file))
+    #     json.dump(export_units, outfile)
     
     return export_units
 
@@ -482,7 +482,7 @@ def main(_):
 
             if FLAGS.cache_on_fail:
                 before_pose = poses3d
-    _out_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), outf+'/data0.json')
+    _out_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), outf)
     with open(_out_file, 'w') as outfile:
         logger.info("exported maya json to data.json")
         json.dump(ALLjson, outfile)
