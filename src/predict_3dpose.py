@@ -48,7 +48,7 @@ tf.app.flags.DEFINE_boolean("procrustes", False, "Apply procrustes analysis at t
 tf.app.flags.DEFINE_boolean("evaluateActionWise",False, "The dataset to use either h36m or heva")
 
 # Directories
-tf.app.flags.DEFINE_string("cameras_path","ckpt/cameras.h5","Directory to load camera parameters")
+tf.app.flags.DEFINE_string("cameras_path","data/h36m/cameras.h5","Directory to load camera parameters")
 tf.app.flags.DEFINE_string("data_dir",   "data/h36m/", "Data directory")
 tf.app.flags.DEFINE_string("train_dir", "experiments", "Training directory.")
 

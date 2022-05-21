@@ -1,0 +1,1 @@
+git clone https://github.com/MendyD/human36m.git data
