@@ -24,7 +24,7 @@ FLAGS = tf.app.flags.FLAGS
 
 order = [15, 12, 25, 26, 27, 17, 18, 19, 1, 2, 3, 6, 7, 8]
 
-outf= 'maya' 
+outf= 'maya/outputData.json' 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -68,6 +68,7 @@ def read_openpose_json(smooth=True, *args):
         if not os.path.isfile(_file): raise Exception("No file found!!, {0}".format(_file))
         data = json.load(open(_file))
         #take first person
+        pdb.set_trace()
         _data = data["people"][0]["pose_keypoints_2d"] if "pose_keypoints_2d" in data["people"][0] else data["people"][0]["pose_keypoints"]
         xy = []
         if len(_data)>=53:
@@ -79,7 +80,7 @@ def read_openpose_json(smooth=True, *args):
         else:
             #tf-pose-estimation
             xy = _data
-
+        pdb.set_trace()
         # get frame index from openpose 12 padding
         frame_indx = re.findall("(\d+)", file_name)
         logger.debug("found {0} for frame {1}".format(xy, str(int(frame_indx[-1]))))
